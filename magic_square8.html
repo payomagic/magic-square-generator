@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Magic Square Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    #magic-square {
+      margin: 20px auto;
+      display: table;
+      border-collapse: collapse;
+      position: relative;
+    }
+    #magic-square td {
+      border: 2px solid #555;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      background-color: #e6f2ff;
+      color: #333;
+      font-weight: bold;
+      width: 60px;
+      height: 60px;
+      transition: background-color 0.5s, transform 0.5s;
+    }
+    input {
+      padding: 10px;
+      font-size: 18px;
+      margin: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #00509e;
+    }
+    #error-message {
+      color: red;
+      font-weight: bold;
+    }
+    #magic-number {
+      font-size: 20px;
+      color: #0066cc;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #message {
+      font-size: 24px;
+      color: #cf4a45;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Magic Square Generator</h1>
+
+  <p>Enter your name and date of birth (DDMMYYYY) and we'll generate a magic square for you:</p>
+
+  <!-- Input fields for name and DOB -->
+  <input type="text" id="name" placeholder="Enter your name" />
+  <input type="text" id="dob" placeholder="Enter your DOB (DDMMYYYY)" />
+  <br>
+  <button onclick="generateSquare()">Generate Magic Square</button>
+
+  <!-- Text to display the magic number -->
+  <div id="magic-number"></div>
+
+  <!-- Area to display the magic square -->
+  <div id="magic-square"></div>
+
+  <!-- Message for counting the highlighted numbers -->
+  <div id="message">All highlighted numbers add up to your magic number!</div>
+
+  <!-- Area to display error message -->
+  <div id="error-message"></div>
+
+  <script>
+    let x;
+
+    function generateMagicSquare(x) {
+      let n = x - 20;
+      const magicSquares = [
+        [
+          [5, 12, 2, n + 1],
+          [3, x - 20, 8, 9],
+          [n + 2, 1, 11, 6],
+          [10, 7, n - 1, 4]
+        ],
+        [
+          [3, x - 20, 8, 9],
+          [5, 12, 2, n + 1],
+          [10, 7, n - 1, 4],
+          [n + 2, 1, 11, 6]
+        ],
+        [
+          [12, 5, n + 1, 2],
+          [x - 20, 3, 6, 8],
+          [1, n + 2, 9, 11],
+          [7, 10, 4, n - 1]
+        ],
+        [
+          [n - 1, 4, 10, 7],
+          [11, 6, n + 2, 1],
+          [8, 9, 3, x - 20],
+          [2, n + 1, 5, 12]
+        ]
+      ];
+      return magicSquares[Math.floor(Math.random() * magicSquares.length)];
+    }
+
+    function generateSquare() {
+      // Get input values
+      let name = document.getElementById("name").value.trim();
+      let dob = document.getElementById("dob").value.trim();
+      
+      if (!name) {
+        document.getElementById("error-message").innerHTML = "Error: Please enter your name.";
+        return;
+      }
+      if (!dob || dob.length !== 8 || isNaN(dob)) {
+        document.getElementById("error-message").innerHTML = "Error: Please enter a valid DOB in DDMMYYYY format.";
+        return;
+      }
+
+      // Calculate the sum of digits from the birthday
+      x = dob.split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+
+      if (x <= 0) {
+        document.getElementById("error-message").innerHTML = "Error: The sum of the digits must be greater than 0.";
+        document.getElementById("magic-square").innerHTML = "";
+        document.getElementById("magic-number").innerHTML = "";
+        return;
+      }
+
+      if (x < 20) {
+        let needed = 21 - x;
+        x += needed;
+      }
+
+      document.getElementById("error-message").innerHTML = "";
+
+      // Display the magic number message
+      document.getElementById("magic-number").innerHTML =
+        `Hello ${name}, Your magic number is ${x}! You should use it to your advantage and bet on it! Or on the numbers in this square. If you lose, you will have luck in love...`;
+
+      // Save the user's data on the server
+      saveUserDataToServer(name, dob);
+
+      // Generate the magic square
+      let magicSquare = generateMagicSquare(x);
+      renderMagicSquare(magicSquare);
+      startAnimations();
+    }
+
+    function renderMagicSquare(square) {
+      let tableHtml = "<table>";
+      for (let row of square) {
+        tableHtml += "<tr>";
+        for (let cell of row) {
+          tableHtml += `<td>${cell}</td>`;
+        }
+        tableHtml += "</tr>";
+      }
+      tableHtml += "</table>";
+      document.getElementById("magic-square").innerHTML = tableHtml;
+    }
+
+    // --- Function to send user data to the server ---
+    function saveUserDataToServer(name, dob) {
+      fetch('saveUserData.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `name=${encodeURIComponent(name)}&dob=${encodeURIComponent(dob)}`
+      })
+      .then(response => response.text())
+      .then(result => {
+        console.log("Server response:", result);
+      })
+      .catch(error => {
+        console.error("Error saving data on server:", error);
+      });
+    }
+    // --- End of function ---
+
+    // --- Helper functions for displaying magic number next to highlighted rows and columns ---
+    function showMagicNumberForRow(startIndex) {
+      let cells = document.querySelectorAll("#magic-square td");
+      if (startIndex >= cells.length) return;
+      let cell = cells[startIndex];
+      let row = cell.parentElement;
+      let extraCell = document.createElement("td");
+      extraCell.innerHTML = "='" + x + "'";
+      extraCell.style.fontSize = "24px";
+      extraCell.style.fontWeight = "bold";
+      extraCell.style.backgroundColor = "#e6f2ff";
+      row.appendChild(extraCell);
+      setTimeout(() => {
+        if (row.contains(extraCell)) {
+          row.removeChild(extraCell);
+        }
+      }, 1500);
+    }
+
+    function showMagicNumberForColumn(columnIndex) {
+      let cells = document.querySelectorAll("#magic-square td");
+      let index = columnIndex + 12;
+      if (index >= cells.length) return;
+      let cell = cells[index];
+      let rect = cell.getBoundingClientRect();
+      let label = document.createElement("div");
+      label.innerHTML = "='" + x + "'";
+      label.style.position = "absolute";
+      label.style.top = rect.top + "px";
+      label.style.left = (rect.right + 10) + "px";
+      label.style.fontSize = "24px";
+      label.style.fontWeight = "bold";
+      label.style.color = "#0066cc";
+      document.body.appendChild(label);
+      setTimeout(() => {
+        if (document.body.contains(label)) {
+          document.body.removeChild(label);
+        }
+      }, 1500);
+    }
+    // --- End of helper functions ---
+
+    function startAnimations() {
+      let cells = document.querySelectorAll("#magic-square td");
+      function resetColors() {
+        cells.forEach(cell => cell.style.backgroundColor = "#e6f2ff");
+      }
+
+      setTimeout(() => {
+        highlightRange(cells, [0, 1, 2, 3], "#cf4a45");  
+        showMagicNumberForRow(0);
+      }, 1000);
+      setTimeout(() => resetColors(), 4000);
+      setTimeout(() => {
+        highlightRange(cells, [4, 5, 6, 7], "#cf4a45");  
+        showMagicNumberForRow(4);
+      }, 5000);
+      setTimeout(() => resetColors(), 8000);
+      setTimeout(() => {
+        highlightRange(cells, [8, 9, 10, 11], "#cf4a45");  
+        showMagicNumberForRow(8);
+      }, 9000);
+      setTimeout(() => resetColors(), 12000);
+      setTimeout(() => {
+        highlightRange(cells, [12, 13, 14, 15], "#cf4a45");  
+        showMagicNumberForRow(12);
+      }, 13000);
+      setTimeout(() => resetColors(), 16000);
+      setTimeout(() => showMessage(), 17000);
+      setTimeout(() => hideMessage(), 20000);
+
+      setTimeout(() => {
+        highlightRange(cells, [0, 4, 8, 12], "#cf4a45");  
+        showMagicNumberForColumn(0);
+      }, 21000);
+      setTimeout(() => resetColors(), 24000);
+      setTimeout(() => {
+        highlightRange(cells, [1, 5, 9, 13], "#cf4a45");  
+        showMagicNumberForColumn(1);
+      }, 25000);
+      setTimeout(() => resetColors(), 28000);
+      setTimeout(() => {
+        highlightRange(cells, [2, 6, 10, 14], "#cf4a45");  
+        showMagicNumberForColumn(2);
+      }, 29000);
+      setTimeout(() => resetColors(), 32000);
+      setTimeout(() => {
+        highlightRange(cells, [3, 7, 11, 15], "#cf4a45");  
+        showMagicNumberForColumn(3);
+      }, 33000);
+      setTimeout(() => resetColors(), 36000);
+
+      setTimeout(() => highlightRange(cells, [3, 6, 9, 12], "#a261e6"), 41000);
+      setTimeout(() => resetColors(), 44000);
+      setTimeout(() => highlightRange(cells, [0, 5, 10, 15], "#a261e6"), 45000);
+      setTimeout(() => resetColors(), 48000);
+      setTimeout(() => highlightRange(cells, [2, 3, 4, 5], "#61e6a2"), 49000);
+      setTimeout(() => resetColors(), 53000);
+      setTimeout(() => highlightRange(cells, [0, 1, 4, 5], "#61e6a2"), 54000);
+      setTimeout(() => resetColors(), 58000);
+      setTimeout(() => highlightRange(cells, [5, 6, 9, 10], "#ee6616"), 59000);
+      setTimeout(() => resetColors(), 63000);
+      setTimeout(() => highlightRange(cells, [0, 1, 14, 15], "#6163e6"), 64000);
+      setTimeout(() => resetColors(), 68000);
+      setTimeout(() => highlightRange(cells, [2, 3, 12, 13], "#a5e661"), 69000);
+      setTimeout(() => resetColors(), 73000);
+      setTimeout(() => highlightRange(cells, [8, 9, 12, 13], "#6163e6"), 74000);
+      setTimeout(() => resetColors(), 78000);
+      setTimeout(() => highlightRange(cells, [1, 4, 11, 14], "#9df37a"), 82000);
+      setTimeout(() => resetColors(), 86000);
+      setTimeout(() => highlightRange(cells, [8, 13, 2, 7], "#9df37a"), 88000);
+      setTimeout(() => resetColors(), 92000);
+      setTimeout(() => finalTransformation(cells), 96000);
+    }
+
+    function highlightRange(cells, indices, color) {
+      indices.forEach(index => {
+        if (index < cells.length) {
+          cells[index].style.backgroundColor = color;
+        }
+      });
+    }
+
+    function showMessage() {
+      document.getElementById("message").style.display = "block";
+    }
+
+    function hideMessage() {
+      document.getElementById("message").style.display = "none";
+    }
+
+    function finalTransformation(cells) {
+      let table = document.querySelector("#magic-square table");
+      table.style.transition = "all 1s ease";
+      table.style.transform = "scale(0.1)";
+      setTimeout(() => {
+        document.getElementById("magic-square").innerHTML = `
+          <table style="margin: 0 auto;">
+            <tr>
+              <td style="font-size: 48px; color: #333; width: 240px; height: 240px; text-align: center; border: 2px solid #555; background-color: #e6f2ff;">${x}</td>
+            </tr>
+          </table>
+        `;
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
