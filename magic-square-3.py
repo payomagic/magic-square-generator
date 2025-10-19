@@ -1,3 +1,6 @@
+## OLD - DO NOT USE!!!
+
+
 def generate_magic_square(n1, n2, magic_sum):
     # Calculate the third number based on the sum of maximum possible combinations
     n3 = magic_sum - n1 - n2
