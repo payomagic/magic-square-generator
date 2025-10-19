@@ -1,3 +1,6 @@
+## OLD - DO NOT USE!!!
+
+
 import random
 
 # get inputs from spectators
