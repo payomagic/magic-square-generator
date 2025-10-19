@@ -1,3 +1,5 @@
+## OLD - DO NOT USE!!!
+
 # function to check if the square is magic
 def is_magic_square(square, magic_sum):
     # check rows
